@@ -1,0 +1,115 @@
+#!/bin/sh
+
+# TEXT MODIFIERS
+TM_BOLD="\e[1m"
+TM_DIM="\e[2m"
+TM_UNDERLINED="\e[4m"
+TM_BLINK="\e[5m"
+TM_INVERTED="\e[7m"
+TM_HIDDEN="\e[8m"
+TM_RESET="\e[0m"
+TM_RESET_BOLD="\e[21m"
+TM_RESET_DIM="\e[22m"
+TM_RESET_UNDERLINED="\e[24m"
+TM_RESET_BLINK="\e[25m"
+TM_RESET_INVERTED="\e[27m"
+TM_RESET_HIDDEN="\e[28m"
+
+# FOREGROUND COLORS
+FG_DEFAULT="\e[39m"
+FG_BLACK="\e[30m"
+FG_RED="\e[31m"
+FG_GREEN="\e[32m"
+FG_YELLOW="\e[33m"
+FG_BLUE="\e[34m"
+FG_MAGENTA="\e[35m"
+FG_CYAN="\e[36m"
+FG_LIGHTGRAY="\e[37m"
+FG_DARKGRAY="\e[90m"
+FG_LIGHTRED="\e[91m"
+FG_LIGHTGREEN="\e[92m"
+FG_LIGHTYELLOW="\e[93m"
+FG_LIGHTBLUE="\e[94m"
+FG_LIGHTMAGENTA="\e[95m"
+FG_LIGHTCYAN="\e[96m"
+FG_WHITE="\e[97m"
+
+# BACKGROUND COLORS
+BG_DEFAULT="\e[49m"
+BG_BLACK="\e[40m"
+BG_RED="\e[41m"
+BG_GREEN="\e[42m"
+BG_YELLOW="\e[43m"
+BG_BLUE="\e[44m"
+BG_MAGENTA="\e[45m"
+BG_CYAN="\e[46m"
+BG_LIGHTGRAY="\e[47m"
+BG_DARKGRAY="\e[100m"
+BG_LIGHTRED="\e[101m"
+BG_LIGHTGREEN="\e[102m"
+BG_LIGHTYELLOW="\e[103m"
+BG_LIGHTBLUE="\e[104m"
+BG_LIGHTMAGENTA="\e[105m"
+BG_LIGHTCYAN="\e[106m"
+BG_WHITE="\e[107m"
+
+# up: goes up n folders
+up(){
+  local d=""
+  limit=$1
+  for ((i=1 ; i <= limit ; i++))
+    do
+      d=$d/..
+    done
+  d=$(echo $d | sed 's/^\///')
+  if [ -z "$d" ]; then
+    d=..
+  fi
+  cd $d
+}
+
+# extract: Extract most know archives with one command
+extract () {
+if [ -f $1 ] ; then
+  case $1 in
+    *.tar.bz2)   tar xjf $1     ;;
+    *.tar.gz)    tar xzf $1     ;;
+    *.bz2)       bunzip2 $1     ;;
+    *.rar)       unrar e $1     ;;
+    *.gz)        gunzip $1      ;;
+    *.tar)       tar xf $1      ;;
+    *.tbz2)      tar xjf $1     ;;
+    *.tgz)       tar xzf $1     ;;
+    *.zip)       unzip $1       ;;
+    *.Z)         uncompress $1  ;;
+    *.7z)        7z x $1        ;;
+    *)     echo "'$1' cannot be extracted via extract()" ;;
+     esac
+ else
+     echo "'$1' is not a valid file"
+ fi
+}
+
+function git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* (*\([^)]*\))*/\1/'
+}
+
+function markup_git_branch {
+  if [[ -n $@ ]]; then
+    if [[ -z $(git status --porcelain 2> /dev/null | tail -n1) ]]; then
+      #echo -e "\001\033[32m\002($@)\001\033[0m\002"
+      echo -e "\001\033[32m\002($@)"
+    else
+      #echo -e "\001\033[31m\002($@)\001\033[0m\002"
+      echo -e "\001\033[31m\002($@)"
+    fi
+  fi
+}
+
+# cmd text structure
+export PS1="\n${TM_BOLD}${FG_GREEN}\u@\h" # user and hostname
+export PS1="${PS1} ${FG_BLUE}\w" # active folder
+export PS1="${PS1} ${FG_LIGHTYELLOW}\$(markup_git_branch \$(git_branch))"
+export PS1="${PS1}\[${FG_DEFAULT}\]\n"
+export PS1="${PS1}[\D{%H:%M:%S}] \$\[${TM_RESET}\] "
+
